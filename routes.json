@@ -1,0 +1,32 @@
+[
+  {
+    "match": {
+      "exact": [
+        "/foo",
+        "/aaa"
+      ],
+      "prefix": [
+        "/products"
+      ]
+    },
+    "destination": {
+      "host": "google.lk",
+      "port": 80
+    }
+  },
+  {
+    "match": {
+      "exact": [
+        "/bar",
+        "/bbb"
+      ],
+      "prefix": [
+        "/users"
+      ]
+    },
+    "destination": {
+      "host": "example.com",
+      "port": 80
+    }
+  }
+]

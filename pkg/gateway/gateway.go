@@ -20,55 +20,32 @@ package gateway
 
 import (
 	"fmt"
+	"github.com/mirage20/simple-gateway/pkg/gateway/config"
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"strings"
 )
 
 type Gateway struct {
 	Port       int
-	ProxyStore ProxyStore
+	ProxyStore *ProxyStore
 }
 
 type transport struct {
 }
 
-type ProxyStore struct {
-	ExactMatch  map[string]*reverseProxy
-	PrefixMatch map[string]*reverseProxy
-	RegexMatch  map[string]*reverseProxy
-}
+func New(port int, routes []config.Route) *Gateway {
 
-type Route struct {
-	Match       Match
-	Destination Destination
-}
-
-type Match struct {
-	Exact  []string
-	Prefix []string
-	Regex  []string
-}
-
-type Destination struct {
-	Host string
-	Port int
-}
-
-func New(port int, routes []Route) *Gateway {
-
-	//proxies := make(map[string]*reverseProxy)
 	gw := &Gateway{
-		Port: port,
+		Port:       port,
+		ProxyStore: NewProxyStore(routes),
 	}
-	gw.UpdateRoutes(routes)
 	return gw
 }
 
 func (gw *Gateway) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	fmt.Printf("%+v\n", req.URL.Path)
-	proxy := gw.findProxy(req.URL.Path)
+	proxy := gw.ProxyStore.FindProxy(req.URL.Path)
 
 	if proxy == nil {
 		http.Error(rw, "no route found", http.StatusNotFound)
@@ -79,43 +56,13 @@ func (gw *Gateway) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	proxy.ServeHTTP(rw, req)
 }
 
-func (gw *Gateway) findProxy(path string) *reverseProxy {
-
-	if proxy, ok := gw.ProxyStore.ExactMatch[path]; ok {
-		return proxy
-	}
-
-	for prefix, proxy := range gw.ProxyStore.PrefixMatch {
-		if strings.HasPrefix(path, prefix) {
-			return proxy
-		}
-	}
-	return nil
-}
+//func (gw *Gateway) findProxy(path string) *proxy.ReverseProxy
 
 func (gw *Gateway) Start() {
 	log.Printf("Starting gateway on port %d\n", gw.Port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", gw.Port), gw); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func (gw *Gateway) UpdateRoutes(routes []Route) {
-
-	proxyStore := ProxyStore{
-		ExactMatch:  make(map[string]*reverseProxy),
-		PrefixMatch: make(map[string]*reverseProxy),
-	}
-	for _, route := range routes {
-		p := NewReverseProxy(route.Destination)
-		for _, path := range route.Match.Exact {
-			proxyStore.ExactMatch[path] = p
-		}
-		for _, path := range route.Match.Prefix {
-			proxyStore.PrefixMatch[path] = p
-		}
-	}
-	gw.ProxyStore = proxyStore
 }
 
 func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
