@@ -8,7 +8,9 @@
 2. Run the gateway using 
 
         ./simple-gateway -routes=routes.json -port=8080
+    Or
 
+        docker run -p 8080:8080 -v <routes.json-directory>:/var mirage20/simple-gateway -routes=/var/routes.json
 
 #### Writing filters
 
