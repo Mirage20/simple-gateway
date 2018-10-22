@@ -21,6 +21,7 @@ package gateway
 import (
 	"fmt"
 	"github.com/mirage20/simple-gateway/pkg/gateway/config"
+	"github.com/mirage20/simple-gateway/pkg/gateway/filters"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -29,38 +30,34 @@ import (
 type Gateway struct {
 	Port       int
 	ProxyStore *ProxyStore
+	Filters    []filters.Filter
 }
 
 type transport struct {
 }
 
-func New(port int, routes []config.Route) *Gateway {
+func NewGateway(port int, routes []config.Route, filters ...filters.Filter) *Gateway {
 
 	gw := &Gateway{
 		Port:       port,
 		ProxyStore: NewProxyStore(routes),
+		Filters:    filters,
 	}
 	return gw
 }
 
 func (gw *Gateway) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	fmt.Printf("%+v\n", req.URL.Path)
 	proxy := gw.ProxyStore.FindProxy(req.URL.Path)
-
 	if proxy == nil {
 		http.Error(rw, "no route found", http.StatusNotFound)
 		return
 	}
-
-	fmt.Printf("%p\n", proxy)
 	proxy.ServeHTTP(rw, req)
 }
 
-//func (gw *Gateway) findProxy(path string) *proxy.ReverseProxy
-
 func (gw *Gateway) Start() {
 	log.Printf("Starting gateway on port %d\n", gw.Port)
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", gw.Port), gw); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", gw.Port), filters.Chain(gw, gw.Filters...)); err != nil {
 		log.Fatal(err)
 	}
 }

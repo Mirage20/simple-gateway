@@ -8,3 +8,8 @@
 2. Run the gateway using 
 
         ./simple-gateway -routes=routes.json -port=8080
+
+
+#### Writing filters
+
+See [`filters`](pkg/gateway/filters) package for samples

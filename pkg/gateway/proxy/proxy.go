@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httputil"
 )
@@ -33,13 +32,13 @@ func director(host string, port int) func(req *http.Request) {
 		req.URL.Host = host
 		req.Host = host
 
-		b, err := httputil.DumpRequest(req, true)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(string(b))
-		fmt.Printf("%+v\n", req)
-
-		fmt.Println("=======")
+		//b, err := httputil.DumpRequest(req, true)
+		//if err != nil {
+		//	log.Fatal(err)
+		//}
+		//fmt.Println(string(b))
+		//fmt.Printf("%+v\n", req)
+		//
+		//fmt.Println("=======")
 	}
 }

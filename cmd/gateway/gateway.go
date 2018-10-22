@@ -22,6 +22,7 @@ import (
 	"flag"
 	"github.com/mirage20/simple-gateway/pkg/gateway"
 	"github.com/mirage20/simple-gateway/pkg/gateway/config"
+	"github.com/mirage20/simple-gateway/pkg/gateway/filters"
 	"log"
 	"os"
 
@@ -75,7 +76,7 @@ func main() {
 	//	},
 	//}
 
-	gw := gateway.New(port, r)
+	gw := gateway.NewGateway(port, r, filters.Log(), filters.Time())
 
 	gw.Start()
 
